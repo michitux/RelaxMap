@@ -17,16 +17,16 @@ You can compile by simple make command:
 
 2. How to run RelaxMap
 
-	[Usage] >./ompRelaxmap <seed> <network data> <# threads> <# attempts> <threshold> <vThresh> <maxIter> <outDir> <prior/normal>
+	[Usage] >./ompRelaxmap <seed> <network data> <# threads> <# attempts> <threshold> <vThresh> <maxIter> <outPath> <prior/normal>
 
 The required arguments are following:
 
 	1) seed: this is for random seed value for generating random sequential order of vertices during the iterative optimization process.
 
-	2) network data: RelaxMap currently supports two different types of the input data format. 1) pajek format (.net) and 2) edge list format (.txt)
+	2) network data: RelaxMap currently supports three different types of the input data format. 1) pajek format (.net), 2) edge list format (.txt) and 3) binary graph files (glob pattern).
 				You can find an example of each format in the data/ directory.
 				You can also find more datasets from Stanford Network Analysis Project (SNAP) network data repository.
-				You should note that RelaxMap assumes the input graph is directed graph.
+				You should note that RelaxMap assumes the input graph is directed graph unless binary graph files are specified.
 
 	3) # thread: the number of threads 
 
@@ -38,7 +38,7 @@ The required arguments are following:
 
 	7) maxIter: the number of maximum iteration for each super-step. (recommended 10)
 
-	8) outDir: the directory where the output files will be located.
+	8) outPath: the path where the output file shall be written.
 
 	9) prior/normal flag: apply the prioritized search for efficient runs (prior) or not (normal).  (recommended prior)
 

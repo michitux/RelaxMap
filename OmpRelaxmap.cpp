@@ -41,7 +41,7 @@ void findAssignedPart(int* start, int* end, int numNodes, int numTh, int myID);
 int main(int argc, char *argv[]) {
 
 	if( argc < 10){ 
-		cout << "Call: ./ompRelaxmap <seed> <network.net> <# threads> <# attempts> <threshold> <vThresh> <maxIter> <outDir> <prior/normal>  [selflinks]" << endl;
+		cout << "Call: ./ompRelaxmap <seed> <network.net> <# threads> <# attempts> <threshold> <vThresh> <maxIter> <outPath> <prior/normal>  [selflinks]" << endl;
 		exit(-1);
 	}
 	
