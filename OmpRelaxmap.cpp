@@ -138,8 +138,9 @@ int main(int argc, char *argv[]) {
     if(includeSelfLinks)
 		//cout << "including " <<  NselfLinks << " self link(s)." << endl;  
 		cout << "current version always excludes self links.\nignoring " << NselfLinks << " self link(s)." << endl;
-    else
+    else {
         cout << "ignoring " <<  NselfLinks << " self link(s)." << endl;
+    }
 
 	//Swap vector to free memory
 	map<pair<int,int>,double>().swap(origNetwork.Edges);
