@@ -12,6 +12,8 @@
 #include <vector>
 #include <map>
 #include <utility>
+#include <cstdint>
+#include <cassert>
 #include "Node.h"
 #include "Module.h"
 #include "FileIO.h"
@@ -262,6 +264,116 @@ void load_linkList_format_network(string fName, Network &network) {
 		cout << endl;
 
 	cout << "done! (found " << network.nodes.size() << " nodes and " << network.Edges.size() << " edges.)" << endl;
+}
+
+#include <glob.h>
+#include <vector>
+#include <string>
+
+inline std::vector<std::string> glob(const std::string& pat){
+    using namespace std;
+    glob_t glob_result;
+    glob(pat.c_str(),GLOB_TILDE,NULL,&glob_result);
+    vector<string> ret;
+    for(unsigned int i=0;i<glob_result.gl_pathc;++i){
+        ret.push_back(string(glob_result.gl_pathv[i]));
+    }
+    globfree(&glob_result);
+    return ret;
+}
+
+
+template <typename stream_t>
+uint64_t GetVarint(stream_t &is) {
+  auto get_byte = [&is]() -> uint8_t {
+    uint8_t result;
+    is.read(reinterpret_cast<char*>(&result), 1);
+    return result;
+  };
+  uint64_t u, v = get_byte();
+  if (!(v & 0x80)) return v;
+  v &= 0x7F;
+  u = get_byte(), v |= (u & 0x7F) << 7;
+  if (!(u & 0x80)) return v;
+  u = get_byte(), v |= (u & 0x7F) << 14;
+  if (!(u & 0x80)) return v;
+  u = get_byte(), v |= (u & 0x7F) << 21;
+  if (!(u & 0x80)) return v;
+  u = get_byte(), v |= (u & 0x7F) << 28;
+  if (!(u & 0x80)) return v;
+  u = get_byte(), v |= (u & 0x7F) << 35;
+  if (!(u & 0x80)) return v;
+  u = get_byte(), v |= (u & 0x7F) << 42;
+  if (!(u & 0x80)) return v;
+  u = get_byte(), v |= (u & 0x7F) << 49;
+  if (!(u & 0x80)) return v;
+  u = get_byte(), v |= (u & 0x7F) << 56;
+  if (!(u & 0x80)) return v;
+  u = get_byte();
+  if (u & 0xFE)
+    throw std::overflow_error("Overflow during varint64 decoding.");
+  v |= (u & 0x7F) << 63;
+  return v;
+}
+
+void load_binary_network(const string& fName, Network &network) {
+    uint32_t maxNodeId = 0;
+    std::vector<string> paths = glob(fName);
+
+    network.setNNode(0);
+    
+    if (!paths.empty()) {
+        std::ifstream is;
+        size_t _file_index = 0;
+
+        auto next_input = [&]() {
+            is.close();
+            if (_file_index < paths.size()) {
+                is.open(paths[_file_index++]);
+                if (!is) {
+                    printf("Graph: Error Opening Graph file\n");
+                }
+            }
+        };
+
+        next_input();
+
+        for (uint32_t u = 0; is.good() && is.is_open(); ++u) {
+            if (u > maxNodeId) maxNodeId = u;
+            for (size_t deg = GetVarint(is); deg > 0 && is.good(); --deg) {
+                uint32_t v;
+                if (!is.read(reinterpret_cast<char*>(&v), 4)) {
+                    throw std::runtime_error("I/O error while reading next neighbor");
+                }
+
+                assert(u != v);
+                
+                if (v > maxNodeId) maxNodeId = v;
+
+		network.Edges[std::make_pair(u, v)] = 1;
+		network.Edges[std::make_pair(v, u)] = 1;
+            }
+
+            if (is.is_open() && (is.peek() == std::char_traits<char>::eof() || !is.good())) {
+                next_input();
+            }
+        }
+    }
+    
+	network.setNNode(maxNodeId + 1);
+	network.setTotNodeWeights(maxNodeId + 1);	// Since no node weight info given, assume uniform weight.
+	network.setNEdge(network.Edges.size());
+	
+	network.modules = vector<Module>(maxNodeId + 1);
+	network.nodes = vector<Node>(maxNodeId + 1);
+
+	for (uint32_t u = 0; u <= maxNodeId; ++u) {
+		network.nodes[u].setID(u);
+		network.nodes[u].setName(to_string(u));
+	}
+
+	cout << "done! (found " << network.nodes.size() << " nodes and " << network.Edges.size() << " edges.)" << endl;
+
 }
 
 void write_cluster_result(string outFile, Network &finalNetwork) {

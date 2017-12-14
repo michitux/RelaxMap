@@ -93,8 +93,10 @@ int main(int argc, char *argv[]) {
 	if(networkType == ".net"){
 		load_pajek_format_network(networkFile, origNetwork);    
 	}
-	else{
+	else if (networkType == ".txt") {
 		load_linkList_format_network(networkFile, origNetwork); 
+	} else {
+		load_binary_network(networkFile, origNetwork);
 	}
 
 	gettimeofday(&end, NULL);
@@ -233,6 +235,7 @@ int main(int argc, char *argv[]) {
 	
 	cout << "\nComputed Code Length = " << origNetwork.calculateCodeLength()/log(2.0) << endl;
 
+#if 0
 	//Print two-level clustering result in .tree file
 	print_twoLevel_Cluster(origNetwork, networkName, outDir);
 
@@ -248,8 +251,19 @@ int main(int argc, char *argv[]) {
 	for(int i=0;i<nNode;i++)
 		outFile << origNetwork.nodes[i].ModIdx() + 1 << "\x0D\x0A";
 	outFile.close();
+#endif
+	
+	std::ofstream outFile(outDir);
 
+	if (!outFile) return 1;
 
+	for (uint32_t u = 0; u < nNode; ++u) {
+		uint32_t p = origNetwork.nodes[u].ModIdx();
+		outFile.write(reinterpret_cast<const char*>(&u), 4);
+		outFile.write(reinterpret_cast<const char*>(&p), 4);
+	}
+
+	return 0;
 }
 
 

@@ -18,6 +18,7 @@ using namespace std;
 // declaration of functions related to file IO.
 void load_pajek_format_network(string fName, Network &network);
 void load_linkList_format_network(string fName, Network &network);
+void load_binary_network(const string &fName, Network &network);
 void write_cluster_result(string outFile, Network &finalNetwork);
 
 #endif
